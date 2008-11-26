@@ -32,7 +32,7 @@ class App
   def self.setup_config
     config = YAML.load(open(App::ROOT + "/config/settings.yml"))
     @config = config
-    @config["API_URL"] = "https://#{@config["API_KEY"]}@api.slicehost.com/"
+    @config["api_url"] = "https://#{@config["api_key"]}@api.slicehost.com/"
     true
   end
   
