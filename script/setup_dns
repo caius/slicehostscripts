@@ -93,8 +93,6 @@ if options.domain.empty? || options.ip_address.empty?
   exit(1)
 end
 
-p options
-
 # Simply because they're used so 
 # much and I'm lazy at typing.
 domain = options.domain.periodify
