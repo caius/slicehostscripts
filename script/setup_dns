@@ -28,7 +28,7 @@ class OptParseArgs
     options = OpenStruct.new
     options.domain = ""
     options.ip_address = ""
-    options.cname_string = nil
+    options.google_cname = nil
     options.quiet = false
     options.ttl = CONFIG["dns"]["ttl"] || 84600
         
@@ -49,8 +49,8 @@ class OptParseArgs
       end
       
       # Optional Arg: Google CNAME verification string
-      opts.on("-g", "--google [CNAME_STRING]", String, "Google CNAME Verification String") do | cname_string |
-        options.cname_string = cname_string
+      opts.on("-g", "--google [CNAME_STRING]", String, "Google CNAME Verification String") do | google_cname |
+        options.google_cname = google_cname
       end
       
       # Options Arg: TTL
@@ -93,26 +93,52 @@ end
 
 p options
 
+# Simply because its used so much
+# and I'm lazy at typing.
+domain = options.domain.periodify
+
 # See if the zone already exists
-if Zone.find(:first, :params => {:origin => options.domain.periodify})
+if Zone.find(:first, :params => {:origin => domain})
   puts "Error: Domain already exists in your control panel"
   exit(2)
 end
 
-# Create the zone
-zone = Zone.new(:origin => options.domain.periodify, :ttl => options.ttl)
-zone.save
+# Zone is new—create it
+zone = Zone.create(:origin => domain, :ttl => options.ttl, :active => "Y")
 
-# Create the records
+# And now create the records
+# Main A record
+zone.create_record(
+  :record_type => "A",
+  :name        => domain,
+  :data        => options.ip_address,
+  :ttl         => options.ttl,
+  :active      => "Y"
+)
 
+# www as a CNAME
+zone.create_record(
+  :record_type => "CNAME",
+  :name        => "www",
+  :data        => domain,
+  :ttl         => options.ttl,
+  :active      => "Y"
+)
 
+# NS records
+%w( ns1 ns2 ns3 ).each do |prefix|
+zone.create_record(
+  :record_type => "NS",
+  :name        => "#{prefix}.slicehost.com",
+  :data        => domain,
+  :ttl         => options.ttl,
+  :active      => "Y"
+)
 
-
-
-
-
-
-
+# See if we need to add the google domain
+if options.google_cname
+  
+end
 
 
 
