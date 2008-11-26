@@ -12,7 +12,7 @@
 ARGV = [
   "--domain=aaacaiusistesting.com",
   "--ip-address=208.78.100.145",
-  # "--google=blahblahblah",
+  # "--google-verify=blahblahblah",
   # "--quiet",
   # "--help",
   # "--version",
@@ -29,6 +29,7 @@ class OptParseArgs
     options.domain = ""
     options.ip_address = ""
     options.google_cname = nil
+    options.google_mx = false
     options.quiet = false
     options.ttl = CONFIG["dns"]["ttl"] || 84600
         
@@ -47,10 +48,14 @@ class OptParseArgs
       opts.on("-i", "--ip-address IP_ADDRESS", String, "IP Address of the slice") do | ip |
         options.ip_address = ip
       end
-      
+            
       # Optional Arg: Google CNAME verification string
-      opts.on("-g", "--google [CNAME_STRING]", String, "Google CNAME Verification String") do | google_cname |
+      opts.on("-gv", "--google-verify [CNAME_STRING]", String, "Google Verification String") do | google_cname |
         options.google_cname = google_cname
+      end
+      
+      opts.on("-gm", "--gmail", "Google MX records") do | google_mx |
+        options.google_mx = google_mx
       end
       
       # Options Arg: TTL
@@ -135,10 +140,64 @@ zone.create_record(
   :active      => "Y"
 )
 
-# See if we need to add the google domain
-if options.google_cname
-  
+# See if we need to add the google verification record
+unless options.google_cname.nil?
+  zone.create_record(
+    :record_type => "CNAME",
+    :name        => options.google_cname,
+    :data        => "google.com",
+    :ttl         => options.ttl,
+    :active      => "Y"
+  )
 end
 
 
+# See if we need to add the google MX records
+if options.google_mx
+  
+  zone.create_record(
+    :record_type => "MX",
+    :name => domain,
+    :data => "ASPMX.L.GOOGLE.COM.",
+    :aux => 1,
+    :ttl => options.ttl,
+    :active => "Y"
+  )
+  
+  zone.create_record(
+    :record_type => "MX",
+    :name => domain,
+    :data => "ALT1.ASPMX.L.GOOGLE.COM.",
+    :aux => 5,
+    :ttl => options.ttl,
+    :active => "Y"
+  )
+  
+  zone.create_record(
+    :record_type => "MX",
+    :name => domain,
+    :data => "ALT2.ASPMX.L.GOOGLE.COM.",
+    :aux => 5,
+    :ttl => options.ttl,
+    :active => "Y"
+  )
+  
+  zone.create_record(
+    :record_type => "MX",
+    :name => domain,
+    :data => "ASPMX2.GOOGLEMAIL.COM.",
+    :aux => 10,
+    :ttl => options.ttl,
+    :active => "Y"
+  )
+  
+  zone.create_record(
+    :record_type => "MX",
+    :name => domain,
+    :data => "ASPMX3.GOOGLEMAIL.COM.",
+    :aux => 10,
+    :ttl => options.ttl,
+    :active => "Y"
+  )
 
+end
