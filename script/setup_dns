@@ -9,15 +9,6 @@
 #  Sets up records for a new domain
 # 
 
-ARGV = [
-  "--domain=aaacaiusistesting.com",
-  "--ip-address=208.78.100.145",
-  # "--google-verify=blahblahblah",
-  # "--quiet",
-  # "--help",
-  # "--version",
-]
-
 require File.join(File.dirname(__FILE__) + "/../config/boot.rb")
 require "optparse"
 require "ostruct"
@@ -28,10 +19,10 @@ class OptParseArgs
     options = OpenStruct.new
     options.domain = ""
     options.ip_address = ""
-    options.google_cname = nil
+    options.google_cname = ""
     options.google_mx = false
     options.quiet = false
-    options.ttl = CONFIG["dns"]["ttl"] || 84600
+    options.ttl = App::config["dns"]["ttl"] || 84600
         
     opts = OptionParser.new do |opts|
       opts.banner = "Usage: ruby script/setup_dns [options]"
@@ -50,7 +41,7 @@ class OptParseArgs
       end
             
       # Optional Arg: Google CNAME verification string
-      opts.on("-gv", "--google-verify [CNAME_STRING]", String, "Google Verification String") do | google_cname |
+      opts.on("-gv", "--google-verify CNAMESTRING", String, "Google Verification String") do | google_cname |
         options.google_cname = google_cname
       end
       
@@ -98,9 +89,10 @@ end
 
 p options
 
-# Simply because its used so much
-# and I'm lazy at typing.
+# Simply because they're used so 
+# much and I'm lazy at typing.
 domain = options.domain.periodify
+@quiet = options.quiet
 
 # See if the zone already exists
 if Zone.find(:first, :params => {:origin => domain})
@@ -108,11 +100,16 @@ if Zone.find(:first, :params => {:origin => domain})
   exit(2)
 end
 
+output "Creating domain: #{domain}"
+
 # Zone is new—create it
 zone = Zone.create(:origin => domain, :ttl => options.ttl, :active => "Y")
 
+output :created
+
 # And now create the records
 # Main A record
+output "Creating main A record"
 zone.create_record(
   :record_type => "A",
   :name        => domain,
@@ -120,8 +117,10 @@ zone.create_record(
   :ttl         => options.ttl,
   :active      => "Y"
 )
+output :created
 
 # www as a CNAME
+output "Creating www CNAME record"
 zone.create_record(
   :record_type => "CNAME",
   :name        => "www",
@@ -129,32 +128,38 @@ zone.create_record(
   :ttl         => options.ttl,
   :active      => "Y"
 )
+output :created
 
 # NS records
+output "Creating NS records"
 %w( ns1 ns2 ns3 ).each do |prefix|
-zone.create_record(
-  :record_type => "NS",
-  :name        => "#{prefix}.slicehost.com",
-  :data        => domain,
-  :ttl         => options.ttl,
-  :active      => "Y"
-)
+  zone.create_record(
+    :record_type => "NS",
+    :name        => "#{prefix}.slicehost.com",
+    :data        => domain,
+    :ttl         => options.ttl,
+    :active      => "Y"
+  )
+end
+output :created
 
 # See if we need to add the google verification record
-unless options.google_cname.nil?
+unless options.google_cname.empty?
+  output "Creating Google CNAME record"
   zone.create_record(
     :record_type => "CNAME",
-    :name        => options.google_cname,
+    :name        => "#{options.google_cname}.#{domain}",
     :data        => "google.com",
     :ttl         => options.ttl,
     :active      => "Y"
   )
+  output :created
 end
 
 
 # See if we need to add the google MX records
 if options.google_mx
-  
+  output "Creating Google MX records"
   zone.create_record(
     :record_type => "MX",
     :name => domain,
@@ -199,5 +204,5 @@ if options.google_mx
     :ttl => options.ttl,
     :active => "Y"
   )
-
+  output :created
 end
