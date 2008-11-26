@@ -1,5 +1,5 @@
 class Zone < ActiveResource::Base
-  self.site = API_URL
+  self.site = App::config["API_URL"]
   
   # Get the child records
   def records( force_refresh = false )
