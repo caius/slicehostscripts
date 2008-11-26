@@ -1,0 +1,4 @@
+api_key: YOUR_KEY_HERE
+
+dns:
+  ttl: 86400
