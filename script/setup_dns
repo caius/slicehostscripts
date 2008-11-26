@@ -93,8 +93,13 @@ end
 
 p options
 
+# See if the zone already exists
+unless zone = Zone.find(:first, :params => {:origin => options.domain.periodify})
+  
+end
+
 # Create the zone
-zone = Zone.new(:origin => options.domain, :ttl => options.ttl)
+zone = Zone.new(:origin => options.domain.periodify, :ttl => options.ttl)
 zone.save
 
 # Create the records
