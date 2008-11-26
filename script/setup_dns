@@ -23,6 +23,7 @@ class OptParseArgs
     options.google_mx = false
     options.quiet = false
     options.ttl = App::config["dns"]["ttl"] || 84600
+    options.subdomains = []
         
     opts = OptionParser.new do |opts|
       opts.banner = "Usage: ruby script/setup_dns [options]"
@@ -49,9 +50,14 @@ class OptParseArgs
         options.google_mx = google_mx
       end
       
-      # Options Arg: TTL
+      # Optional Arg: TTL
       opts.on("-t", "--ttl [TTL]", Integer, "Time to Live for the records") do | ttl |
         options.ttl = ttl
+      end
+      
+      # Optional Arg: subdomains
+      opts.on("-s", "--subdomain SUBDOMAIN", String, "Additional Subdomain to add") do | subdomain |
+        options.subdomains << subdomain
       end
       
       opts.separator ""
@@ -100,6 +106,10 @@ if Zone.find(:first, :params => {:origin => domain})
   exit(2)
 end
 
+##
+## Creating the domain + core records
+##
+
 output "Creating domain: #{domain}"
 
 # Zone is new—create it
@@ -142,6 +152,29 @@ output "Creating NS records"
   )
 end
 output :created
+
+##
+## Optional Subdomains
+##
+
+unless options.subdomains.empty?
+  options.subdomains.each do |subdomain|
+    output "Creating CNAME for #{subdomain}"
+    zone.create_record(
+      :record_type => "CNAME",
+      :name        => subdomain,
+      :data        => domain,
+      :ttl         => options.ttl,
+      :active      => "Y"
+    )
+    output :created
+  end
+end
+
+
+##
+## Optional Google Records
+##
 
 # See if we need to add the google verification record
 unless options.google_cname.empty?
