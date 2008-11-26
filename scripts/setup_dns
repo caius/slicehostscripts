@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+# 
+#  setup_dns
+#  slicehostAPI
+#  
+#  Created by Caius Durling on 2008-11-26.
+#  Copyright 2008 Caius Durling. All rights reserved.
+# 
+#  Sets up records for a new domain
+# 
+
+ARGV = ["--domain=caius.name", "--ip-address=218.16.222.222"]
+
+require File.join(File.dirname(__FILE__) + "/../config/boot.rb")
+require "optparse"
+require "ostruct"
+
+class OptParseArgs
+  
+  def self.parse( args )
+    options = OpenStruct.new
+    options.domain = ""
+    options.ip_address = ""
+    options.cname_string = ""
+    options.quiet = false
+    
+    opts = OptionParser.new do |opts|
+      opts.banner = "Usage: ruby script/setup_dns [options]"
+
+      opts.separator ""
+      opts.separator "Specific options:"
+
+      # Required Arg: Domain name
+      opts.on("-d", "--domain DOMAIN", String, "Domain name") do | domain |
+        options.domain = domain
+      end
+      
+      # Required Arg: IP Address of slice
+      opts.on("-i", "--ip-address IP_ADDRESS", String, "IP Address of the slice") do | ip |
+        options.ip_address = ip
+      end
+      
+      # Optional Arg: Google CNAME verification string
+      opts.on("-g", "--google [CNAME_STRING]", String, "Google CNAME Verification String") do | cname_string |
+        options.cname_string = cname_string
+      end
+      
+      opts.separator ""
+      opts.separator "Common options:"
+      
+      # Optional Arg: Run quietly
+      opts.on("-q", "--quiet", "Run quietly (minimal output)") do |q|
+        options.quiet = q
+      end
+      
+      opts.on_tail("-h", "--help", "Show this message") do
+        puts opts
+        exit
+      end
+      
+      opts.on_tail("-v", "--version", "Show version") do
+        puts OptionParser::Version.join(".")
+        exit
+      end
+    end
+    
+    opts.parse!(args)
+    options
+  end
+end
+
+# Kick it all off
+options = OptParseArgs.parse(ARGV)
+
+# Check we have the needed options
+if options.domain.empty? || options.ip_address.empty?
+  puts "Error: Both domain and ip address are required flags"
+  exit(1)
+end
+
+p options
+
+
+
+
+
+
+
+
+
+
+
+
+
+
