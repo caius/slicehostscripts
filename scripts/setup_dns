@@ -9,7 +9,14 @@
 #  Sets up records for a new domain
 # 
 
-ARGV = ["--domain=caius.name", "--ip-address=218.16.222.222"]
+ARGV = [
+  "--domain=aaacaiusistesting.com",
+  "--ip-address=208.78.100.145",
+  # "--google=blahblahblah",
+  # "--quiet",
+  # "--help",
+  # "--version",
+]
 
 require File.join(File.dirname(__FILE__) + "/../config/boot.rb")
 require "optparse"
@@ -21,9 +28,10 @@ class OptParseArgs
     options = OpenStruct.new
     options.domain = ""
     options.ip_address = ""
-    options.cname_string = ""
+    options.cname_string = nil
     options.quiet = false
-    
+    options.ttl = CONFIG["dns"]["ttl"] || 84600
+        
     opts = OptionParser.new do |opts|
       opts.banner = "Usage: ruby script/setup_dns [options]"
 
@@ -45,11 +53,16 @@ class OptParseArgs
         options.cname_string = cname_string
       end
       
+      # Options Arg: TTL
+      opts.on("-t", "--ttl [TTL]", Integer, "Time to Live for the records") do | ttl |
+        options.ttl = ttl
+      end
+      
       opts.separator ""
       opts.separator "Common options:"
       
       # Optional Arg: Run quietly
-      opts.on("-q", "--quiet", "Run quietly (minimal output)") do |q|
+      opts.on("-q", "--quiet", "Run quietly (minimal output)") do | q |
         options.quiet = q
       end
       
@@ -59,7 +72,7 @@ class OptParseArgs
       end
       
       opts.on_tail("-v", "--version", "Show version") do
-        puts OptionParser::Version.join(".")
+        puts APP_VERSION
         exit
       end
     end
@@ -80,7 +93,11 @@ end
 
 p options
 
+# Create the zone
+zone = Zone.new(:origin => options.domain, :ttl => options.ttl)
+zone.save
 
+# Create the records
 
 
 

@@ -1,4 +1,5 @@
 APP_ROOT = File.expand_path(File.join(File.dirname(__FILE__) + "/../"))
+APP_VERSION = "0.1"
 
 require "rubygems"
 require "activeresource"
@@ -8,7 +9,8 @@ require "yaml"
 config = YAML.load(open(APP_ROOT + "/config/settings.yml"))
 
 # Setup the constants
-API_KEY = config["api_key"]
+CONFIG = config
+API_KEY = CONFIG["api_key"]
 API_URL = "https://#{API_KEY}@api.slicehost.com/"
 
 # Load the models
