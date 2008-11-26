@@ -94,8 +94,9 @@ end
 p options
 
 # See if the zone already exists
-unless zone = Zone.find(:first, :params => {:origin => options.domain.periodify})
-  
+if Zone.find(:first, :params => {:origin => options.domain.periodify})
+  puts "Error: Domain already exists in your control panel"
+  exit(2)
 end
 
 # Create the zone
