@@ -4,7 +4,7 @@ class App
   include Singleton
   
   ROOT = File.expand_path(File.join(File.dirname(__FILE__) + "/../"))
-  VERSION = "0.1"
+  VERSION = "0.2"
   
   # It goes Dongg
   def self.boot
